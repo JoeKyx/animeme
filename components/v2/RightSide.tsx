@@ -3,6 +3,7 @@ import { useImage } from '@/context/ImageContext';
 import { generatingImageLoadingTexts } from '@/data/text';
 import { useLoadingMessage } from '@/hooks/useLoadingMessage';
 import { DownloadIcon, Share1Icon } from '@radix-ui/react-icons';
+import imageCompression from 'browser-image-compression';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -13,7 +14,28 @@ import IconButton from '../ui/IconButton';
 
 const RightSide = () => {
   const [rejection, setRejection] = useState<string>();
+  const [imageInfo, setImageInfo] = useState<string | null>(null)
   const [dropZoneActive, setDropZoneActive] = useState(true);
+
+  async function compressImage(imageFile: File) {
+    try {
+      const options = {
+        maxSizeMB: 4.4, // (maximum file size)
+        useWebWorker: true,
+      };
+
+      // Check if file needs to be compressed
+      if (imageFile.size < options.maxSizeMB * 1024 * 1024) {
+        return imageFile;
+      }
+      setImageInfo('Compressing image...')
+      const compressedFile = await imageCompression(imageFile, options);
+      setImageInfo(null);
+      return compressedFile; // this will return file object that can be uploaded or previewed
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
 
 
@@ -27,6 +49,7 @@ const RightSide = () => {
     exit: { opacity: 0 },
     animate: { opacity: 1 }
   };
+
 
   const {
     getRootProps,
@@ -58,18 +81,24 @@ const RightSide = () => {
       }
 
       const previewFile = acceptedFiles[0]
+
       const reader = new FileReader();
 
       reader.onload = (e) => {
         const img = document.createElement("img");
-        img.onload = () => {
+        img.onload = async () => {
+          const compressedImg = await compressImage(previewFile);
+          if (compressedImg === undefined) {
+            setRejection("File is not supported");
+            return;
+          }
           // Once the image is loaded, get its dimensions
           const width = img.naturalWidth;
           const height = img.naturalHeight;
 
           // Now you can store the file information along with dimensions
           const previewFiles = {
-            preview: URL.createObjectURL(previewFile),
+            preview: URL.createObjectURL(compressedImg),
             file: previewFile as File,
             width: width,
             height: height
@@ -233,7 +262,7 @@ const RightSide = () => {
 
                   />
                 ) : (
-                  <TextOverlay textOverlay={'Upload your image to get started'} />
+                  <TextOverlay textOverlay={imageInfo || rejection || 'Upload your image to get started'} />
                 )}
                 {(imageContext.status === 'GENERATING' || imageContext.status === 'ANIMATING') && <LoadingOverlay />}
 
