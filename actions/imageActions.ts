@@ -3,7 +3,7 @@
 import { ANIMATE_PARAMS } from '@/data/imageParams';
 import { Style } from '@/data/styles';
 import { scaleDown } from '@/lib/utils';
-import LeonardoAPI from 'leonardo-ts/src/LeonardoAPI';
+import LeonardoAPI from 'leonardo-ts/src/leonardoApi';
 import { AnimeImageResponse } from './actionResponseTypes';
 
 export async function mangaImage(
