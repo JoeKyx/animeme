@@ -23,6 +23,7 @@ export async function mangaImage(
   }
 
   if (!process.env.LEONARDO_API_KEY) {
+    console.log('No API key found.');
     throw new Error('No API key found.');
   }
   const leonardo = new LeonardoAPI(process.env.LEONARDO_API_KEY, false);
