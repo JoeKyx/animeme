@@ -98,8 +98,8 @@ const RightSide = () => {
 
           // Now you can store the file information along with dimensions
           const previewFiles = {
-            preview: URL.createObjectURL(compressedImg),
-            file: previewFile as File,
+            preview: URL.createObjectURL(previewFile),
+            file: compressedImg as File,
             width: width,
             height: height
           };
