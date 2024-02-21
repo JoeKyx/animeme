@@ -20,7 +20,7 @@ const RightSide = () => {
   async function compressImage(imageFile: File) {
     try {
       const options = {
-        maxSizeMB: 4.4, // (maximum file size)
+        maxSizeMB: 4, // (maximum file size)
         useWebWorker: true,
       };
 
