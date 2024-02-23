@@ -4,13 +4,16 @@ import { ANIMATE_PARAMS } from '@/data/imageParams';
 import { Style } from '@/data/styles';
 import { scaleDown } from '@/lib/utils';
 import LeonardoAPI from 'leonardo-ts/src/leonardoApi';
-import { AnimeImageResponse } from './actionResponseTypes';
+import {
+  CheckImageResponse,
+  GenerateImageBaseResponse,
+} from './actionResponseTypes';
 
 export async function mangaImage(
   formData: FormData,
   style: Style,
   init_image_strength?: number
-): Promise<AnimeImageResponse> {
+): Promise<GenerateImageBaseResponse> {
   const imageFile = formData.get('image') as File;
   const width = formData.get('width') as string;
   const height = formData.get('height') as string;
@@ -32,7 +35,7 @@ export async function mangaImage(
   const arrayBuffer = await imageFile.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   const fileType = imageFile.type.split('/')[1];
-  // TODO: Fix leonardo api to accept file type instead of file name
+  // TODO: Fix leonardo api to accept file type instead of file
   const modifiedFileName = imageFile.name.includes('.')
     ? imageFile.name
     : `${imageFile.name}.${fileType}`;
@@ -60,25 +63,46 @@ export async function mangaImage(
     style.params.init_strength = init_image_strength;
   }
 
-  const mangaImage = await leonardo.generateImages({
+  const mangaImage = await leonardo.generateImagesBase({
     ...style.params,
     init_image_id: imageId,
     width: scaledWidth,
     height: scaledHeight,
   });
+
   if (!mangaImage.success) {
     return {
       success: false,
       error: mangaImage.message,
     };
   }
+  return {
+    success: true,
+    imageId: mangaImage.generationId,
+  };
+}
 
-  const image = mangaImage.result.images[0];
+export async function checkForGeneration(
+  imageId: string
+): Promise<CheckImageResponse> {
+  if (!process.env.LEONARDO_API_KEY) {
+    throw new Error('No API key found.');
+  }
+  const leonardo = new LeonardoAPI(process.env.LEONARDO_API_KEY, false);
+  const generationStatus = await leonardo.getGenerationResult(imageId);
+  if (!generationStatus.success) {
+    return {
+      success: false,
+      status: generationStatus.message,
+    };
+  }
   return {
     success: true,
     image: {
-      url: image.url,
-      id: image.id,
+      url: generationStatus.result.images[0].motionMP4URL
+        ? generationStatus.result.images[0].motionMP4URL
+        : generationStatus.result.images[0].url,
+      id: generationStatus.result.images[0].id,
       type: 'image',
     },
   };
@@ -86,25 +110,20 @@ export async function mangaImage(
 
 export async function animateImage(
   imageId: string
-): Promise<AnimeImageResponse> {
+): Promise<GenerateImageBaseResponse> {
   if (!process.env.LEONARDO_API_KEY) {
     throw new Error('No API key found.');
   }
   const leonardo = new LeonardoAPI(process.env.LEONARDO_API_KEY, false);
-  const animateImage = await leonardo.animateImage(imageId, ANIMATE_PARAMS);
+  const animateImage = await leonardo.animateImageBase(imageId, ANIMATE_PARAMS);
   if (!animateImage.success) {
     return {
       success: false,
       error: animateImage.message,
     };
   }
-  const image = animateImage.result;
   return {
     success: true,
-    image: {
-      url: image.url,
-      id: image.id,
-      type: 'video',
-    },
+    imageId: animateImage.generationId,
   };
 }
