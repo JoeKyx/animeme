@@ -12,8 +12,10 @@ export const useMangaUpload = () => {
 
   const mangaUploadedImage = useCallback(
     async (image: PreviewFile, style: Style, init_image_strength?: number) => {
+      console.log('Hi');
       if (image) {
         setStatus('GENERATING');
+        console.log('Image', image);
         const form = new FormData();
         form.append('image', image.file);
         form.append('width', image.width.toString());
@@ -29,6 +31,8 @@ export const useMangaUpload = () => {
           setImageToShow(animeImageResponse.image.url);
           setStatus('SUCCESS');
         } else {
+          console.log('error');
+          console.log(animeImageResponse.error);
           setError(animeImageResponse.error);
           setStatus('ERROR');
         }

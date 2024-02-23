@@ -262,9 +262,15 @@ const RightSide = () => {
 
                   />
                 ) : (
-                  <TextOverlay textOverlay={imageInfo || rejection || 'Upload your image to get started'} />
+
+                  imageInfo ? (
+                    <LoadingOverlay message={imageInfo} />
+                  ) : (
+                    <TextOverlay textOverlay={rejection || 'Upload your image to get started'} />
+                  )
                 )}
                 {(imageContext.status === 'GENERATING' || imageContext.status === 'ANIMATING') && <LoadingOverlay />}
+
 
               </div>
             </motion.div>
@@ -357,13 +363,15 @@ const DownloadButton = ({ url }: { url: string }) => {
   )
 }
 
-const LoadingOverlay = () => {
+const LoadingOverlay = ({ message }: { message?: string }) => {
   const loadingMessage = useLoadingMessage(generatingImageLoadingTexts);
+  const messageToShow = message || loadingMessage;
+
   return (
     <>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10">
         <VscLoading className='animate-spin h-10 w-10 fill-white' />
-        <p className='text-center'>{loadingMessage}</p>
+        <p className='text-center'>{messageToShow}</p>
       </div>
       <motion.div
         initial={{ opacity: 0 }}

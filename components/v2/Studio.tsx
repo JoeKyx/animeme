@@ -61,8 +61,7 @@ export default function Studio() {
   }
 
   const onSubmit = (data: FormData) => {
-    // If the imageContext.image is larger than 4mb, resize it to 4mb
-
+    console.log('Submit')
 
     if (imageContext.image && imageContext.status !== 'GENERATING' && imageContext.status !== 'ANIMATING')
       mangaUpload.mangaUploadedImage(imageContext.image, data.selectedStyle, 1 - (data.creativity / 100));

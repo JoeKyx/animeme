@@ -31,10 +31,14 @@ export async function mangaImage(
   // create a buffer from the file
   const arrayBuffer = await imageFile.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  // send the buffer to leonardo
+  const fileType = imageFile.type.split('/')[1];
+  // TODO: Fix leonardo api to accept file type instead of file name
+  const modifiedFileName = imageFile.name.includes('.')
+    ? imageFile.name
+    : `${imageFile.name}.${fileType}`;
   const response = await leonardo.uploadInitImageFromBuffer(
     buffer,
-    imageFile.name
+    modifiedFileName
   );
   // get the image id
   if (!response.success) {
